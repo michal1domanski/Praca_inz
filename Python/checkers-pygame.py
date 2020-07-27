@@ -40,10 +40,10 @@ class Gra:
 				if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura:
 					self.wybrany_pionek = self.pozycja_myszy
 				elif self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.mozliwe_ruchy(self.wybrany_pionek[0],self.wybrany_pionek[1]):
-					self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1], self.pozycja_myszy[0], self.pozycja_myszy[1])
-					self.koniec_tury()
+					if (self.wybrany_pionek[1] > self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == NIEBIESKI) or (self.wybrany_pionek[1] < self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == CZERWONY): #określenie kierunku poruszania się
+						self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1], self.pozycja_myszy[0], self.pozycja_myszy[1])
+						self.koniec_tury()
 
-		
 	def koniec_tury(self):
 		if self.tura == NIEBIESKI:
 			self.tura = CZERWONY
@@ -97,14 +97,14 @@ class Grafika:
 		if plansza.matrix[koordynaty[0]][koordynaty[1]].zajecie.dama == False:
 			if plansza.matrix[koordynaty[0]][koordynaty[1]].zajecie.kolor == CZERWONY:
 				for i in range(len(self.mozliwe_ruchy)):
-					if self.mozliwe_ruchy[i][0] > koordynaty[0]:
+					if self.mozliwe_ruchy[i][1] > koordynaty[1]:
 						self.podswietl.append(self.mozliwe_ruchy[i])
 			elif plansza.matrix[koordynaty[0]][koordynaty[1]].zajecie.kolor == NIEBIESKI:
 				for i in range(len(self.mozliwe_ruchy)):
-					if self.mozliwe_ruchy[i][0] < koordynaty[0]:
+					if self.mozliwe_ruchy[i][1] < koordynaty[1]:
 						self.podswietl.append(self.mozliwe_ruchy[i])
-		for i in range(len(self.mozliwe_ruchy)):
-			pygame.draw.rect(self.screen, PODSWIETL, (self.mozliwe_ruchy[i][0] * self.wielkosc_pola, self.mozliwe_ruchy[i][1] * self.wielkosc_pola, self.wielkosc_pola, self.wielkosc_pola))
+		for i in range(len(self.podswietl)):
+			pygame.draw.rect(self.screen, PODSWIETL, (self.podswietl[i][0] * self.wielkosc_pola, self.podswietl[i][1] * self.wielkosc_pola, self.wielkosc_pola, self.wielkosc_pola))
 
 class Plansza: 
 	def __init__(self):
