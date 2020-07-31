@@ -3,8 +3,8 @@ import math
 
 '''
 do dodania:
-- damka (tworzenie i ruchy)
-- wymuszenie bicia (kiedy bicie jest dostępne musi zostać wykonane. jeśli bicie jednego pionka jest dostępne z wielu pozycji mozna wybrać dowolne z nich)
+- damki (tworzenie i wszystko)
+- bicie (wymuszenie bicia jest ale jak wybierze się inny pionek to program się wywala)
 '''
 
 BIALY = (255, 255, 255)
@@ -12,8 +12,6 @@ CZARNY = (0, 0, 0)
 CZERWONY = (255, 0, 0)
 NIEBIESKI = (0, 0, 255)
 PODSWIETL = (0, 255, 0)
-NIEBIESKA_DAMA = (0, 125, 255)
-CZERWONA_DAMA = (255, 125, 0)
 
 class Gra:
 	def __init__(self):
@@ -43,11 +41,19 @@ class Gra:
 		if self.wybrany_pionek != None:
 			self.wybrany_mozliwy_ruch = self.plansza.mozliwe_ruchy(self.pozycja_myszy[0], self.pozycja_myszy[1])
 		
+
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				pygame.quit()
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				if self.bicie == False:
+					for i in range(8):
+						for j in range(8):
+							if hasattr(self.plansza.matrix[i][j].zajecie, "kolor") == True:
+								if self.plansza.bicie(i,j) != []:
+									self.bicie = True
+									self.wybrany_pionek = [i,j]
+									break
 					if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura:
 						self.wybrany_pionek = self.pozycja_myszy
 						self.bicie_macierz = self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1])
@@ -61,14 +67,14 @@ class Gra:
 							self.koniec_tury()
 
 				if self.bicie == True:
-					if list(self.pozycja_myszy) in self.plansza.bicie(self.wybrany_pionek[0], self.wybrany_pionek[1]):
+					if self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.bicie(self.wybrany_pionek[0], self.wybrany_pionek[1]):
 						self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1],self.pozycja_myszy[0], self.pozycja_myszy[1])
 						self.plansza.usun_pionek(math.floor((self.wybrany_pionek[0] + self.pozycja_myszy[0])/2), math.floor((self.wybrany_pionek[1] + self.pozycja_myszy[1])/2))
 						if self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1]) == []:
 							self.koniec_tury()
 						else:
 							self.wybrany_pionek = self.pozycja_myszy
-
+	
 	def koniec_tury(self):
 		if self.tura == NIEBIESKI:
 			self.tura = CZERWONY
