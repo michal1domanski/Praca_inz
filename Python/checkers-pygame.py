@@ -3,7 +3,7 @@ import math
 
 '''
 do dodania:
-- damki (tworzenie i wszystko)
+- damki (bicie)
 '''
 
 BIALY = (255, 255, 255)
@@ -11,12 +11,15 @@ CZARNY = (0, 0, 0)
 CZERWONY = (255, 0, 0)
 NIEBIESKI = (0, 0, 255)
 PODSWIETL = (0, 255, 0)
+NIEBIESKA_DAMA = (0, 255, 255)
+CZERWONA_DAMA = (255, 255, 0)
 
 class Gra:
 	def __init__(self):
 		self.grafika = Grafika()
 		self.plansza = Plansza()
 		self.tura = NIEBIESKI
+		self.tura_dama = NIEBIESKA_DAMA
 		self.wybrany_pionek = None
 		self.bijace_pionki = []
 		self.wybrany_mozliwy_ruch = []
@@ -56,21 +59,23 @@ class Gra:
 										self.bijace_pionki.append([i,j])
 										break
 
-					if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura:
+					if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and (self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura or self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura_dama):
 						self.wybrany_pionek = self.pozycja_myszy
 						self.bicie_macierz = self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1])
-						# if self.bicie_macierz != []:
-						# 	self.bicie = True
 
 					elif self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.mozliwe_ruchy(self.wybrany_pionek[0],self.wybrany_pionek[1]):
 
 						if (self.wybrany_pionek[1] > self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == NIEBIESKI) or (self.wybrany_pionek[1] < self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == CZERWONY): #określenie kierunku poruszania się
 							self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1], self.pozycja_myszy[0], self.pozycja_myszy[1])
 							self.koniec_tury()
-
+					
+					elif self.wybrany_pionek != None and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.dama == True and list(self.pozycja_myszy) in self.plansza.ukosne(self.wybrany_pionek[0], self.wybrany_pionek[1]):
+						self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1], self.pozycja_myszy[0], self.pozycja_myszy[1])
+						self.koniec_tury()
 				if self.bicie == True:
-					if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura:
+					if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and (self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura or self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura_dama):
 						self.wybrany_pionek = self.pozycja_myszy
+						print("fifi cwel")
 
 					if self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.bicie(self.wybrany_pionek[0], self.wybrany_pionek[1]):
 						self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1],self.pozycja_myszy[0], self.pozycja_myszy[1])
@@ -83,8 +88,10 @@ class Gra:
 	def koniec_tury(self):
 		if self.tura == NIEBIESKI:
 			self.tura = CZERWONY
+			self.tura_dama = CZERWONA_DAMA
 		else:
 			self.tura = NIEBIESKI
+			self.tura_dama = NIEBIESKA_DAMA
 		
 		self.wybrany_pionek = None
 		self.wybrany_mozliwy_ruch = []
@@ -142,6 +149,8 @@ class Grafika:
 					for i in range(len(self.mozliwe_ruchy)):
 						if self.mozliwe_ruchy[i][1] < koordynaty[1]:
 							self.podswietl.append(self.mozliwe_ruchy[i])
+			else:
+				self.podswietl = plansza.ukosne(koordynaty[0], koordynaty[1])
 		else:
 			self.podswietl = plansza.bicie(koordynaty[0], koordynaty[1])
 		for i in range(len(self.podswietl)):
@@ -261,10 +270,28 @@ class Plansza:
 						possible_moves.append([x-1,y-1])
 		return possible_moves
 
+	def ukosne(self, x, y):
+		ruchy = self.mozliwe_ruchy(x, y)
+		mozliwe_ruchy_damy = []
+		for i in range(len(ruchy)):
+			kierunek = [- (x - ruchy[i][0]), - (y - ruchy[i][1])]
+			while (ruchy[i][0] >= 0 and ruchy[i][0] <= 7 and ruchy[i][1] >= 0 and ruchy[i][1] <= 7): 
+				if self.matrix[ruchy[i][0]][ruchy[i][1]].zajecie == None:
+					mozliwe_ruchy_damy.append([ruchy[i][0], ruchy[i][1]])
+					ruchy[i][0] += kierunek[0]
+					ruchy[i][1] += kierunek[1]
+				else:
+					ruchy[i] = [9,9]
+		return mozliwe_ruchy_damy
+
 	def dama(self, x, y):
 		if self.matrix[x][y].zajecie != None:
-			if (self.matrix[x][y].zajecie.kolor == NIEBIESKI and y == 0) or (self.matrix[x][y].zajecie.kolor == CZERWONY and y == 7):
-				self.matrix[x][y].zajecie.dama == True
+			if (self.matrix[x][y].zajecie.kolor == NIEBIESKI and y == 0):
+				self.matrix[x][y].zajecie.dama = True
+				self.matrix[x][y].zajecie.kolor = NIEBIESKA_DAMA
+			elif (self.matrix[x][y].zajecie.kolor == CZERWONY and y == 7):
+				self.matrix[x][y].zajecie.dama = True
+				self.matrix[x][y].zajecie.kolor = CZERWONA_DAMA
 
 	def bicie(self, x, y):
 		self.gracz = self.matrix[x][y].zajecie.kolor
