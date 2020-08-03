@@ -8,7 +8,7 @@ ZASADY
 
 '''
 do dodania:
--komunikat i sprawdzenie wygranej
+-komunikat i sprawdzenie wygranej (zablokowanie wszystkich pionków przeciwnika)
 '''
 
 BIALY = (255, 255, 255)
@@ -41,9 +41,10 @@ class Gra:
 		self.setup()
 
 		while True:
+			self.koniec_gry()
 			self.zdarzenia()
 			self.update(self.wybrany_pionek)
-
+			
 	def zdarzenia(self):
 		self.pozycja_myszy = self.grafika.koordynaty_planszy(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 		if self.wybrany_pionek != None:
@@ -104,21 +105,7 @@ class Gra:
 
 	def koniec_tury(self):
 		self.plansza.dama(self.pozycja_myszy[0], self.pozycja_myszy[1])
-		counter = 0
-		for i in range(8):
-			for j in range(8):
-				if hasattr(self.plansza.matrix[i][j].zajecie, "kolor"):
-					if self.plansza.matrix[i][j].zajecie.kolor != self.tura and self.plansza.matrix[i][j].zajecie.kolor != self.tura_dama:
-						counter += 1
-		if self.tura == NIEBIESKI:
-			kolor = "NIEBIESKI"
-		else:
-			kolor = "CZERWONY"
-		if counter == 0:
-			print("Gracz {} wygrał".format(kolor))
-		else:
-			print("zmiana tury")
-		
+
 		if self.tura == NIEBIESKI:
 			self.tura = CZERWONY
 			self.tura_dama = CZERWONA_DAMA
@@ -131,6 +118,23 @@ class Gra:
 		self.bicie = False
 		self.bicie_macierz = []
 
+	def koniec_gry(self):
+		dostepne_ruchy = []
+		for i in range(8):
+			for j in range(8):
+				if hasattr(self.plansza.matrix[i][j].zajecie, "kolor"):
+					if self.grafika.pokaz_ruchy([i, j], self.plansza) != [] and (self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama):
+						dostepne_ruchy.append([self.grafika.pokaz_ruchy([i, j], self.plansza)])
+		
+
+		if self.tura == NIEBIESKI:
+			kolor = "Czerwony"
+		else:
+			kolor = "Niebieski"
+
+		if dostepne_ruchy == []:
+			self.grafika.rysuj_okno("{} gracz wygrywa".format(kolor))
+
 class Grafika:
 	def __init__(self):
 
@@ -138,6 +142,7 @@ class Grafika:
 		self.screen = pygame.display.set_mode((self.szerokosc, self.szerokosc))
 		self.wielkosc_pola = math.floor(self.szerokosc / 8)
 		self.promien_pionka = math.floor(self.wielkosc_pola / 2)
+		self.informacja = False
 
 	def setup(self):
 		pygame.init()
@@ -148,6 +153,9 @@ class Grafika:
 		self.narysuj_pionki(plansza)
 		if koordynaty != None:
 			self.pokaz_ruchy(koordynaty, plansza)
+
+		if self.informacja:
+			self.screen.blit(self.napis, self.napis_pole)
 
 		pygame.display.update()
 		
@@ -187,6 +195,14 @@ class Grafika:
 			self.podswietl = plansza.bicie(koordynaty[0], koordynaty[1])
 		for i in range(len(self.podswietl)):
 			pygame.draw.rect(self.screen, PODSWIETL, (self.podswietl[i][0] * self.wielkosc_pola, self.podswietl[i][1] * self.wielkosc_pola, self.wielkosc_pola, self.wielkosc_pola))
+		return self.podswietl
+
+	def rysuj_okno(self, info):
+		self.informacja = True
+		self.czcionka = pygame.font.SysFont("comicsansms", 40)
+		self.napis = self.czcionka.render(info, True, PODSWIETL, CZARNY)
+		self.napis_pole = self.napis.get_rect()
+		self.napis_pole.center = (self.szerokosc/2, self.szerokosc/2) 
 
 class Plansza: 
 	def __init__(self):
@@ -350,7 +366,6 @@ class Plansza:
 								self.mozliwe_bicie.append([x-self.linia[0], y-self.linia[1]])
 		else:
 			pola_dostepne = self.ukosne(x, y)
-			print(pola_dostepne)
 			for i in range(len(pola_dostepne)):
 				odleglosc = [pola_dostepne[i][0] - x, pola_dostepne[i][1] - y]
 				kierunek_ruchu = [math.floor(odleglosc[0]/abs(odleglosc[0])), math.floor(odleglosc[1]/abs(odleglosc[1]))]
