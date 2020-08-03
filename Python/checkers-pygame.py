@@ -6,11 +6,6 @@ ZASADY
 -pozniej sobie to napisze. narazie mi sie nie chce.
 '''
 
-'''
-do dodania:
--komunikat i sprawdzenie wygranej (zablokowanie wszystkich pionków przeciwnika)
-'''
-
 BIALY = (255, 255, 255)
 CZARNY = (0, 0, 0)
 CZERWONY = (255, 0, 0)
