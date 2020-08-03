@@ -1,6 +1,6 @@
 import pygame
 import math
-
+import sys
 '''
 ZASADY
 -pozniej sobie to napisze. narazie mi sie nie chce.
@@ -8,7 +8,7 @@ ZASADY
 
 '''
 do dodania:
-- damki (bicie, dalej jest cos popsute - ogarniecie ruchow bicia damka ma jakis blad. wyswietlanie sie ruchow podczas bicia jest zle, dalej nie wiem jak jest z podwojnym biciem, !!!damknki (chyba) moga bic swoje piony - Sprawdz to!!!)
+-komunikat i sprawdzenie wygranej
 '''
 
 BIALY = (255, 255, 255)
@@ -52,6 +52,7 @@ class Gra:
 		for event in pygame.event.get():
 			if event.type == pygame.QUIT:
 				pygame.quit()
+				sys.exit
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				if self.bicie == False:
 					for i in range(8):
@@ -91,11 +92,10 @@ class Gra:
 						if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.dama == False:
 							self.plansza.usun_pionek(math.floor((self.wybrany_pionek[0] + self.pozycja_myszy[0])/2), math.floor((self.wybrany_pionek[1] + self.pozycja_myszy[1])/2))
 
-						else: #usuniecie pionka po zbiciu przez dame (to dzielenie to nie dziala na dame niestety)
+						else:
 							pomoc = [self.wybrany_pionek[0] - self.pozycja_myszy[0], self.wybrany_pionek[1] - self.pozycja_myszy[1]]
 							kierunek_usuniecia = [math.floor(pomoc[0]/abs(pomoc[0])), math.floor(pomoc[1]/abs(pomoc[1]))]
 							self.plansza.usun_pionek(self.pozycja_myszy[0] + kierunek_usuniecia[0], self.pozycja_myszy[1] + kierunek_usuniecia[1])
-
 						if self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1]) == []:
 							self.koniec_tury()
 
@@ -104,7 +104,21 @@ class Gra:
 
 	def koniec_tury(self):
 		self.plansza.dama(self.pozycja_myszy[0], self.pozycja_myszy[1])
-
+		counter = 0
+		for i in range(8):
+			for j in range(8):
+				if hasattr(self.plansza.matrix[i][j].zajecie, "kolor"):
+					if self.plansza.matrix[i][j].zajecie.kolor != self.tura and self.plansza.matrix[i][j].zajecie.kolor != self.tura_dama:
+						counter += 1
+		if self.tura == NIEBIESKI:
+			kolor = "NIEBIESKI"
+		else:
+			kolor = "CZERWONY"
+		if counter == 0:
+			print("Gracz {} wygrał".format(kolor))
+		else:
+			print("zmiana tury")
+		
 		if self.tura == NIEBIESKI:
 			self.tura = CZERWONY
 			self.tura_dama = CZERWONA_DAMA
@@ -116,8 +130,6 @@ class Gra:
 		self.wybrany_mozliwy_ruch = []
 		self.bicie = False
 		self.bicie_macierz = []
-
-		print("zmiana tury")
 
 class Grafika:
 	def __init__(self):
@@ -303,7 +315,6 @@ class Plansza:
 					ruchy[i] = [9,9]
 		return mozliwe_ruchy_damy
 		
-
 	def dama(self, x, y):
 		if self.matrix[x][y].zajecie != None:
 			if (self.matrix[x][y].zajecie.kolor == NIEBIESKI and y == 0):
@@ -317,8 +328,15 @@ class Plansza:
 		self.gracz = self.matrix[x][y].zajecie.kolor
 		if self.gracz == NIEBIESKI:
 			self.damka = NIEBIESKA_DAMA
-		else:
+		elif self.gracz == CZERWONY:
 			self.damka = CZERWONA_DAMA
+		elif self.gracz == NIEBIESKA_DAMA:
+			self.gracz = NIEBIESKI
+			self.damka = NIEBIESKA_DAMA
+		elif self.gracz == CZERWONA_DAMA:
+			self.gracz = CZERWONY
+			self.damka = CZERWONA_DAMA
+
 		self.mozliwe_bicie = []
 		if self.matrix[x][y].zajecie.dama == False:
 			for i in range(len(self.pola_obok(x,y))):
@@ -330,16 +348,29 @@ class Plansza:
 						if (self.ruch_bicia[0] <= 7 and self.ruch_bicia[0] >= 0) and (self.ruch_bicia[1] <= 7 and self.ruch_bicia[1] >= 0):
 							if self.matrix[self.ruch_bicia[0]][self.ruch_bicia[1]].zajecie == None:
 								self.mozliwe_bicie.append([x-self.linia[0], y-self.linia[1]])
-		else: # cos tutaj jest mocno spierdolone i psuje gre (tylko jak jest dama na planszy)
+		else:
 			pola_dostepne = self.ukosne(x, y)
+			print(pola_dostepne)
 			for i in range(len(pola_dostepne)):
-				wartosci_pomocnicze = [pola_dostepne[i][0] - x, pola_dostepne[i][1] - y]
-				kierunek_piona = [(wartosci_pomocnicze[0]/abs(wartosci_pomocnicze[0]))*2, (wartosci_pomocnicze[1]/abs(wartosci_pomocnicze[1]))*2]
-				pole_do_sprawdzenia = [math.floor(wartosci_pomocnicze[0] + kierunek_piona[0]), math.floor(wartosci_pomocnicze[1] + kierunek_piona[1])]
-				if (pole_do_sprawdzenia[0] <= 7 and pole_do_sprawdzenia[0] >= 0) and (pole_do_sprawdzenia[1] <= 7 and pole_do_sprawdzenia[1] >=0):
-					if self.matrix[pole_do_sprawdzenia[0]][pole_do_sprawdzenia[1]].zajecie == None:
-						[pole_do_sprawdzenia for pole_do_sprawdzenia in pola_dostepne if pole_do_sprawdzenia not in pola_dostepne]
-						self.mozliwe_bicie.append([pole_do_sprawdzenia[0],pole_do_sprawdzenia[1]])
+				odleglosc = [pola_dostepne[i][0] - x, pola_dostepne[i][1] - y]
+				kierunek_ruchu = [math.floor(odleglosc[0]/abs(odleglosc[0])), math.floor(odleglosc[1]/abs(odleglosc[1]))]
+				pole_wrogiego_pionka = [pola_dostepne[i][0] + kierunek_ruchu[0], pola_dostepne[i][1] + kierunek_ruchu[1]]
+				pole_po_biciu = [pole_wrogiego_pionka[0] + kierunek_ruchu[0], pole_wrogiego_pionka[1] + kierunek_ruchu[1]]
+				if pole_po_biciu[0] <=7 and pole_po_biciu[0] >= 0 and pole_po_biciu[1] <= 7 and pole_po_biciu[1] >=0:
+					if pole_wrogiego_pionka[0] <=7 and pole_wrogiego_pionka[0] >= 0 and pole_wrogiego_pionka[1] <= 7 and pole_wrogiego_pionka[1] >=0:
+						if self.matrix[pole_wrogiego_pionka[0]][pole_wrogiego_pionka[1]].zajecie != None and self.matrix[pole_po_biciu[0]][pole_po_biciu[1]].zajecie == None:
+							if self.matrix[pole_wrogiego_pionka[0]][pole_wrogiego_pionka[1]].zajecie.kolor != self.gracz and self.matrix[pole_wrogiego_pionka[0]][pole_wrogiego_pionka[1]].zajecie.kolor != self.damka:
+								self.mozliwe_bicie.append([pole_po_biciu[0], pole_po_biciu[1]])
+				
+			for i in range(len(self.pola_obok(x,y))):
+				if hasattr(self.matrix[self.pola_obok(x,y)[i][0]][self.pola_obok(x,y)[i][1]].zajecie, "kolor") == True:
+					if self.matrix[self.pola_obok(x,y)[i][0]][self.pola_obok(x,y)[i][1]].zajecie.kolor != self.gracz and self.matrix[self.pola_obok(x,y)[i][0]][self.pola_obok(x,y)[i][1]].zajecie.kolor != self.damka:
+						self.wrog = [self.pola_obok(x,y)[i][0],self.pola_obok(x,y)[i][1]]
+						self.linia = [(x - self.wrog[0])*2, (y - self.wrog[1])*2]
+						self.ruch_bicia = [x - self.linia[0], y - self.linia[1]]
+						if (self.ruch_bicia[0] <= 7 and self.ruch_bicia[0] >= 0) and (self.ruch_bicia[1] <= 7 and self.ruch_bicia[1] >= 0):
+							if self.matrix[self.ruch_bicia[0]][self.ruch_bicia[1]].zajecie == None:
+								self.mozliwe_bicie.append([x-self.linia[0], y-self.linia[1]])
 		return self.mozliwe_bicie
 
 	def pola_obok(self, x, y):
