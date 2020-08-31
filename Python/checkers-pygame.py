@@ -36,6 +36,7 @@ class Gra:
 		self.setup()
 
 		while True:
+			self.akcje()
 			self.koniec_gry()
 			self.zdarzenia()
 			self.update(self.wybrany_pionek)
@@ -51,6 +52,7 @@ class Gra:
 				sys.exit
 			if event.type == pygame.MOUSEBUTTONDOWN:
 				if self.bicie == False:
+					
 					for i in range(8):
 						for j in range(8):
 							if hasattr(self.plansza.matrix[i][j].zajecie, "kolor") == True:
@@ -121,7 +123,6 @@ class Gra:
 					if self.grafika.pokaz_ruchy([i, j], self.plansza) != [] and (self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama):
 						dostepne_ruchy.append([self.grafika.pokaz_ruchy([i, j], self.plansza)])
 		
-
 		if self.tura == NIEBIESKI:
 			kolor = "Czerwony"
 		else:
@@ -129,6 +130,21 @@ class Gra:
 
 		if dostepne_ruchy == []:
 			self.grafika.rysuj_okno("{} gracz wygrywa".format(kolor))
+		else:
+			return dostepne_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
+
+	def akcje(self): #do AI
+		ruchy = self.koniec_gry()
+		bicia = []
+		for x in range(8):
+			for y in range(8):
+				if hasattr(self.plansza.matrix[x][y].zajecie, "kolor") == True:
+					if self.plansza.bicie(x,y) != [] and (self.plansza.matrix[x][y].zajecie.kolor == self.tura or self.plansza.matrix[x][y].zajecie.kolor == self.tura_dama):
+						bicia.append(self.plansza.bicie(x,y))
+		if bicia == []:
+			return ruchy
+		else:
+			return bicia
 
 class Grafika:
 	def __init__(self):
