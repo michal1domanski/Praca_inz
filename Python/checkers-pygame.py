@@ -117,11 +117,13 @@ class Gra:
 
 	def koniec_gry(self):
 		dostepne_ruchy = []
+		pionki_ruchy = []
 		for i in range(8):
 			for j in range(8):
 				if hasattr(self.plansza.matrix[i][j].zajecie, "kolor"):
 					if self.grafika.pokaz_ruchy([i, j], self.plansza) != [] and (self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama):
 						dostepne_ruchy.append([self.grafika.pokaz_ruchy([i, j], self.plansza)])
+						pionki_ruchy.append([i,j])
 		
 		if self.tura == NIEBIESKI:
 			kolor = "Czerwony"
@@ -131,19 +133,23 @@ class Gra:
 		if dostepne_ruchy == []:
 			self.grafika.rysuj_okno("{} gracz wygrywa".format(kolor))
 		else:
-			return dostepne_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
+			return dostepne_ruchy, pionki_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
 
 	def akcje(self): #do AI
-		ruchy = self.koniec_gry()
+		ruchy, ruchy_bez_bicia = self.koniec_gry()
 		bicia = []
+		pionki = []
 		for x in range(8):
 			for y in range(8):
 				if hasattr(self.plansza.matrix[x][y].zajecie, "kolor") == True:
 					if self.plansza.bicie(x,y) != [] and (self.plansza.matrix[x][y].zajecie.kolor == self.tura or self.plansza.matrix[x][y].zajecie.kolor == self.tura_dama):
 						bicia.append(self.plansza.bicie(x,y))
+						pionki.append([x,y])
 		if bicia == []:
+			print(ruchy_bez_bicia)
 			return ruchy
 		else:
+			print(pionki)
 			return bicia
 
 class Grafika:
