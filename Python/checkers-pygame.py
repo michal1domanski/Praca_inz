@@ -32,13 +32,24 @@ class Gra:
 	def update(self, koordynaty): #koordynaty = wspolrzedne pionka
 		self.grafika.update(koordynaty, self.plansza)
 
-	def main(self):
+	def action(self):#, checker, move):
+		# self.plansza.rusz_pionek(checker[0], checker[1], move[0], move[1])
+		# self.koniec_tury()
+		# self.koniec_gry()
+		pass
+
+	def main(self, bot = False):
 		self.setup()
 
 		while True:
-			self.akcje()
 			self.koniec_gry()
-			self.zdarzenia()
+			if bot == True:
+				break
+				#bot moves
+				pass
+			else:
+				self.zdarzenia()
+
 			self.update(self.wybrany_pionek)
 			
 	def zdarzenia(self):
@@ -114,6 +125,7 @@ class Gra:
 		self.wybrany_mozliwy_ruch = []
 		self.bicie = False
 		self.bicie_macierz = []
+		self.koniec_gry()
 
 	def koniec_gry(self):
 		dostepne_ruchy = []
@@ -130,27 +142,10 @@ class Gra:
 		else:
 			kolor = "Niebieski"
 
-		if dostepne_ruchy == []:
+		if dostepne_ruchy == [] or dostepne_ruchy == None:
 			self.grafika.rysuj_okno("{} gracz wygrywa".format(kolor))
 		else:
-			return dostepne_ruchy, pionki_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
-
-	def akcje(self): #do AI
-		ruchy, ruchy_bez_bicia = self.koniec_gry()
-		bicia = []
-		pionki = []
-		for x in range(8):
-			for y in range(8):
-				if hasattr(self.plansza.matrix[x][y].zajecie, "kolor") == True:
-					if self.plansza.bicie(x,y) != [] and (self.plansza.matrix[x][y].zajecie.kolor == self.tura or self.plansza.matrix[x][y].zajecie.kolor == self.tura_dama):
-						bicia.append(self.plansza.bicie(x,y))
-						pionki.append([x,y])
-		if bicia == []:
-			print(ruchy_bez_bicia)
-			return ruchy
-		else:
-			print(pionki)
-			return bicia
+			return dostepne_ruchy #, pionki_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
 
 class Grafika:
 	def __init__(self):
@@ -442,6 +437,7 @@ class Pole:
 	def __init__(self, kolor, zajecie = None):
 		self.kolor = kolor
 		self.zajecie = zajecie
+
 
 def main():
 	game = Gra()
