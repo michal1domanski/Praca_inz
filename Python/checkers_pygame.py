@@ -26,98 +26,127 @@ class Gra:
 		self.bicie = False
 		self.bicie_macierz = []
 
+		self.dostepne_ruchy = []
+		self.pionki_ruchy = []
+		self.endgame = False
+
 	def setup(self):
 		self.grafika.setup()
 
 	def update(self, koordynaty): #koordynaty = wspolrzedne pionka
 		self.grafika.update(koordynaty, self.plansza)
 
-	def action(self):#, checker, move):
-		# self.plansza.rusz_pionek(checker[0], checker[1], move[0], move[1])
-		# self.koniec_tury()
-		# self.koniec_gry()
-		pass
+	def action(self, move):#, checker, move):
+		if self.endgame == True:
+			exit
+		else:
+			self.setup()
+			self.update(self.wybrany_pionek)
+			env = self.zdarzenia(move)
+			self.update(self.wybrany_pionek)
 
-	def main(self, bot = True):
+			return env
+
+	def main(self):
 		self.setup()
 
 		while True:
 			self.koniec_gry()
-			if bot == True:
-				break
-				#bot moves
-				pass
-			else:
-				self.zdarzenia()
-
+			self.zdarzenia()
 			self.update(self.wybrany_pionek)
 			
-	def zdarzenia(self):
-		self.pozycja_myszy = self.grafika.koordynaty_planszy(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
-		if self.wybrany_pionek != None:
-			self.wybrany_mozliwy_ruch = self.plansza.mozliwe_ruchy(self.pozycja_myszy[0], self.pozycja_myszy[1])
-		
-		for event in pygame.event.get():
-			if event.type == pygame.QUIT:
-				pygame.quit()
-				sys.exit
-			if event.type == pygame.MOUSEBUTTONDOWN:
-				if self.bicie == False:
-					
-					for i in range(8):
-						for j in range(8):
-							if hasattr(self.plansza.matrix[i][j].zajecie, "kolor") == True:
-								if self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama:
-									if self.plansza.bicie(i,j) != []:
-										self.bicie = True
-										self.bijace_pionki.append([i,j])
-										break
+	def zdarzenia(self, bot_move):
 
-					if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and (self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura or self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura_dama):
+		if self.tura == NIEBIESKI:
 
-						self.wybrany_pionek = self.pozycja_myszy
-						self.bicie_macierz = self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1])
+			self.pozycja_myszy = self.grafika.koordynaty_planszy(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
+			if self.wybrany_pionek != None:
+				self.wybrany_mozliwy_ruch = self.plansza.mozliwe_ruchy(self.pozycja_myszy[0], self.pozycja_myszy[1])
+			
+			for event in pygame.event.get():
+				if event.type == pygame.QUIT:
+					pygame.quit()
+					sys.exit
+				if event.type == pygame.MOUSEBUTTONDOWN:
+					if self.bicie == False:
+						
+						for i in range(8):
+							for j in range(8):
+								if hasattr(self.plansza.matrix[i][j].zajecie, "kolor") == True:
+									if self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama:
+										if self.plansza.bicie(i,j) != []:
+											self.bicie = True
+											self.bijace_pionki.append([i,j])
+											break
 
-					elif self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.mozliwe_ruchy(self.wybrany_pionek[0],self.wybrany_pionek[1]):
+						if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and (self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura or self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura_dama):
 
-						if (self.wybrany_pionek[1] > self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == NIEBIESKI) or (self.wybrany_pionek[1] < self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == CZERWONY): #określenie kierunku poruszania się
+							self.wybrany_pionek = self.pozycja_myszy
+							self.bicie_macierz = self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1])
+
+						elif self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.mozliwe_ruchy(self.wybrany_pionek[0],self.wybrany_pionek[1]):
+
+							if (self.wybrany_pionek[1] > self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == NIEBIESKI) or (self.wybrany_pionek[1] < self.pozycja_myszy[1] and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.kolor == CZERWONY): #określenie kierunku poruszania się
+
+								self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1], self.pozycja_myszy[0], self.pozycja_myszy[1])
+								self.koniec_tury()
+						
+						if self.wybrany_pionek != None and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.dama == True and list(self.pozycja_myszy) in self.plansza.ukosne(self.wybrany_pionek[0], self.wybrany_pionek[1]):
 
 							self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1], self.pozycja_myszy[0], self.pozycja_myszy[1])
 							self.koniec_tury()
-					
-					if self.wybrany_pionek != None and self.plansza.matrix[self.wybrany_pionek[0]][self.wybrany_pionek[1]].zajecie.dama == True and list(self.pozycja_myszy) in self.plansza.ukosne(self.wybrany_pionek[0], self.wybrany_pionek[1]):
 
-						self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1], self.pozycja_myszy[0], self.pozycja_myszy[1])
-						self.koniec_tury()
+					if self.bicie == True:
 
-				if self.bicie == True:
-
-					if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and (self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura or self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura_dama):
-						self.wybrany_pionek = self.pozycja_myszy
-
-					if self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.bicie(self.wybrany_pionek[0], self.wybrany_pionek[1]):
-						self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1],self.pozycja_myszy[0], self.pozycja_myszy[1])
-
-						if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.dama == False:
-							self.plansza.usun_pionek(math.floor((self.wybrany_pionek[0] + self.pozycja_myszy[0])/2), math.floor((self.wybrany_pionek[1] + self.pozycja_myszy[1])/2))
-
-						else:
-							pomoc = [self.wybrany_pionek[0] - self.pozycja_myszy[0], self.wybrany_pionek[1] - self.pozycja_myszy[1]]
-							kierunek_usuniecia = [math.floor(pomoc[0]/abs(pomoc[0])), math.floor(pomoc[1]/abs(pomoc[1]))]
-							self.plansza.usun_pionek(self.pozycja_myszy[0] + kierunek_usuniecia[0], self.pozycja_myszy[1] + kierunek_usuniecia[1])
-						if self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1]) == []:
-							self.koniec_tury()
-
-						else:
+						if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie != None and (self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura or self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.kolor == self.tura_dama):
 							self.wybrany_pionek = self.pozycja_myszy
 
+						if self.wybrany_pionek != None and list(self.pozycja_myszy) in self.plansza.bicie(self.wybrany_pionek[0], self.wybrany_pionek[1]):
+							self.plansza.rusz_pionek(self.wybrany_pionek[0], self.wybrany_pionek[1],self.pozycja_myszy[0], self.pozycja_myszy[1])
+
+							if self.plansza.matrix[self.pozycja_myszy[0]][self.pozycja_myszy[1]].zajecie.dama == False:
+								self.plansza.usun_pionek(math.floor((self.wybrany_pionek[0] + self.pozycja_myszy[0])/2), math.floor((self.wybrany_pionek[1] + self.pozycja_myszy[1])/2))
+
+							else:
+								pomoc = [self.wybrany_pionek[0] - self.pozycja_myszy[0], self.wybrany_pionek[1] - self.pozycja_myszy[1]]
+								kierunek_usuniecia = [math.floor(pomoc[0]/abs(pomoc[0])), math.floor(pomoc[1]/abs(pomoc[1]))]
+								self.plansza.usun_pionek(self.pozycja_myszy[0] + kierunek_usuniecia[0], self.pozycja_myszy[1] + kierunek_usuniecia[1])
+							if self.plansza.bicie(self.pozycja_myszy[0], self.pozycja_myszy[1]) == []:
+								self.koniec_tury()
+
+							else:
+								self.wybrany_pionek = self.pozycja_myszy
+		else:
+			if self.plansza.bicie(self.pionki_ruchy[bot_move[0]][0], self.pionki_ruchy[bot_move[0]][1]) != []:
+				self.bicie = True
+
+			if self.bicie == False:
+				self.plansza.rusz_pionek(self.pionki_ruchy[bot_move[0]][0], self.pionki_ruchy[bot_move[0]][1], self.dostepne_ruchy[bot_move[0]][0][bot_move[1]][0], self.dostepne_ruchy[bot_move[0]][0][bot_move[1]][1])
+				self.koniec_tury()
+			
+			else:
+				pomoc = [self.pionki_ruchy[bot_move[0]][0] - self.dostepne_ruchy[bot_move[0]][0][0], self.pionki_ruchy[bot_move[0]][1] - self.dostepne_ruchy[bot_move[0]][0][1]]
+				kierunek_usuniecia = [math.floor(pomoc[0]/abs(pomoc[0])), math.floor(pomoc[1]/abs(pomoc[1]))]
+				self.plansza.rusz_pionek(self.pionki_ruchy[bot_move[0]][0], self.pionki_ruchy[bot_move[0]][1], self.dostepne_ruchy[bot_move[0]][0][0], self.dostepne_ruchy[bot_move[0]][0][1])
+				self.plansza.usun_pionek(self.dostepne_ruchy[bot_move[0]][0][0] + kierunek_usuniecia[0], self.dostepne_ruchy[bot_move[0]][0][1] + kierunek_usuniecia[1])
+				if self.plansza.bicie(self.dostepne_ruchy[bot_move[0]][0][0], self.dostepne_ruchy[bot_move[0]][0][1]) == []:
+					self.koniec_tury()
+				#tutaj będzie else jak będzie bicie
+				#jakby co pionki się nie usuwały XD
+
+		return self.plansza.matrix
+
 	def koniec_tury(self):
-		self.plansza.dama(self.pozycja_myszy[0], self.pozycja_myszy[1])
 
 		if self.tura == NIEBIESKI:
+			self.plansza.dama(self.pozycja_myszy[0], self.pozycja_myszy[1])
 			self.tura = CZERWONY
 			self.tura_dama = CZERWONA_DAMA
 		else:
+			for i in range(8):
+				if hasattr(self.plansza.matrix[i][7].zajecie, "kolor"):
+					if self.plansza.matrix[i][7].zajecie.kolor == CZERWONY:
+						self.plansza.dama(i,7)
 			self.tura = NIEBIESKI
 			self.tura_dama = NIEBIESKA_DAMA		
 
@@ -128,24 +157,34 @@ class Gra:
 		self.koniec_gry()
 
 	def koniec_gry(self):
-		dostepne_ruchy = []
-		pionki_ruchy = []
+		self.dostepne_ruchy = []
+		self.pionki_ruchy = []
 		for i in range(8):
 			for j in range(8):
 				if hasattr(self.plansza.matrix[i][j].zajecie, "kolor"):
-					if self.grafika.pokaz_ruchy([i, j], self.plansza) != [] and (self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama):
-						dostepne_ruchy.append([self.grafika.pokaz_ruchy([i, j], self.plansza)])
-						pionki_ruchy.append([i,j])
+					if self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama:
+						if self.plansza.bicie(i,j) != []:
+							self.dostepne_ruchy.append(self.plansza.bicie(i,j))
+							self.pionki_ruchy.append([i,j])
+
+		if self.dostepne_ruchy == []:
+			for i in range(8):
+				for j in range(8):
+					if hasattr(self.plansza.matrix[i][j].zajecie, "kolor"):
+						if self.grafika.pokaz_ruchy([i, j], self.plansza) != [] and (self.plansza.matrix[i][j].zajecie.kolor == self.tura or self.plansza.matrix[i][j].zajecie.kolor == self.tura_dama):
+							self.dostepne_ruchy.append([self.grafika.pokaz_ruchy([i, j], self.plansza)])
+							self.pionki_ruchy.append([i,j])
 		
 		if self.tura == NIEBIESKI:
 			kolor = "Czerwony"
 		else:
 			kolor = "Niebieski"
 
-		if dostepne_ruchy == [] or dostepne_ruchy == None:
+		if self.dostepne_ruchy == [] or self.dostepne_ruchy == None:
+			self.endgame = True
 			self.grafika.rysuj_okno("{} gracz wygrywa".format(kolor))
 		else:
-			return dostepne_ruchy #, pionki_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
+			return self.dostepne_ruchy, self.pionki_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
 
 class Grafika:
 	def __init__(self):
@@ -354,6 +393,7 @@ class Plansza:
 
 	def bicie(self, x, y):
 		self.gracz = self.matrix[x][y].zajecie.kolor
+
 		if self.gracz == NIEBIESKI:
 			self.damka = NIEBIESKA_DAMA
 		elif self.gracz == CZERWONY:
