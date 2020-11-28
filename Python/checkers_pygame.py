@@ -52,12 +52,12 @@ class Gra:
 
 		while True:
 			self.koniec_gry()
-			self.zdarzenia()
+			self.zdarzenia(False)
 			self.update(self.wybrany_pionek)
 			
 	def zdarzenia(self, bot_move):
 
-		if self.tura == NIEBIESKI:
+		if self.tura == NIEBIESKI or bot_move == False:
 
 			self.pozycja_myszy = self.grafika.koordynaty_planszy(pygame.mouse.get_pos()[0], pygame.mouse.get_pos()[1])
 			if self.wybrany_pionek != None:
@@ -184,7 +184,7 @@ class Gra:
 			self.endgame = True
 			self.grafika.rysuj_okno("{} gracz wygrywa".format(kolor))
 		else:
-			return self.dostepne_ruchy, self.pionki_ruchy #wszystkie moliwe ruchy - actions do reinforcement learning
+			return self.dostepne_ruchy, self.pionki_ruchy
 
 class Grafika:
 	def __init__(self):
